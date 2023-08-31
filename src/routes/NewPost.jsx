@@ -1,65 +1,18 @@
-import { useState } from "react";
 import classes from "./NewPost.module.css";
 import Modal from "../components/Modal";
-import { Link, useNavigate } from "react-router-dom";
+import { Form, Link, redirect } from "react-router-dom";
 
 function NewPostPage() {
-  const [enteredText, setEnteredText] = useState("");
-  const [enteredName, setEnteredName] = useState("");
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const inputTextHandler = (e) => {
-    setEnteredText(e.target.value);
-  };
-
-  const inputNameHandler = (e) => {
-    setEnteredName(e.target.value);
-  };
-
-  const submitFormHandler = async (e) => {
-    e.preventDefault();
-
-    const newItem = {
-      author: enteredText,
-      body: enteredName,
-    };
-
-    try {
-      setError(null);
-      setIsLoading(true);
-      const response = await fetch("http://localhost:8080/posts", {
-        body: JSON.stringify(newItem),
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Something went wrong!");
-      }
-
-      navigate("..");
-    } catch (error) {
-      console.error(error);
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Modal>
-      <form className={classes.form} onSubmit={submitFormHandler}>
+      <Form method="POST" className={classes.form}>
         <p>
           <label htmlFor="body">Text</label>
-          <textarea id="body" required rows={3} onChange={inputTextHandler} />
+          <textarea name="body" id="body" required rows={3}/>
         </p>
         <p>
           <label htmlFor="name">Your name</label>
-          <input type="text" id="name" required onChange={inputNameHandler} />
+          <input name="author" type="text" id="name" required/>
         </p>
         <p className={classes.actions}>
           <Link to=".." type="button">
@@ -67,9 +20,33 @@ function NewPostPage() {
           </Link>
           <button type="submit">Add Post</button>
         </p>
-      </form>
+      </Form>
     </Modal>
   );
 }
 
 export default NewPostPage;
+
+export async function action({ request, params }) {
+  const formData = await request.formData();
+
+  
+  const newPost = {
+    author: formData.get("author"),
+    body: formData.get("body"),
+  };
+  
+  const response = await fetch("http://localhost:8080/posts", {
+    body: JSON.stringify(newPost),
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    return response;
+  }
+
+  return redirect("/");
+}
