@@ -1,26 +1,24 @@
-import { useState } from "react";
-import MainHeader from "./components/MainHeader";
-import PostsList from "./components/PostsList";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import MainLayout from "./routes/MainLayout";
+import PostsPage from "./routes/Posts";
+import NewPostPage from "./routes/NewPost";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <MainLayout />,
+    children: [
+      { index: true, element: <PostsPage /> },
+      {
+        path: "/create-post",
+        element: <NewPostPage />,
+      },
+    ],
+  },
+]);
 
 function App() {
-  const [modalIsVisible, setModalIsVisible] = useState(false);
-
-  function showModalHandler() {
-    setModalIsVisible(true);
-  }
-
-  function hideModalHandler() {
-    setModalIsVisible(false);
-  }
-
-  return (
-    <>
-      <MainHeader onCreatePost={showModalHandler} />
-      <main>
-        <PostsList onCloseModal={hideModalHandler} showModal={modalIsVisible} />
-      </main>
-    </>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;

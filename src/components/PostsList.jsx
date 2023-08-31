@@ -1,24 +1,32 @@
+import { createPortal } from "react-dom";
+import LoadingSpinner from "./LoadingSpinner";
 import Post from "./Post";
-import NewPost from "./NewPost";
 import classes from "./PostsList.module.css";
-import { useState } from "react";
-import Modal from "./Modal";
+import { useEffect, useState } from "react";
 
-function PostsList(props) {
+function PostsList() {
   const [posts, setPosts] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const addPostHandler = (newPost) => {
-    const newItem = {
-      ...newPost,
-      id: new Date().toISOString(),
-    };
+  useEffect(() => {
+    (async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch("http://localhost:8080/posts");
+        if (!response.ok) {
+          throw new Error("Cannot get posts");
+        }
+        const responseData = await response.json();
 
-    setPosts((prevState) => {
-      return [...prevState, newItem];
-    });
-
-    props.onCloseModal();
-  };
+        setPosts(responseData.posts);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   let content = (
     <div style={{ textAlign: "center", color: "white" }}>
@@ -39,12 +47,10 @@ function PostsList(props) {
 
   return (
     <>
-      {props.showModal && (
-        <Modal onClose={props.onCloseModal}>
-          <NewPost onCancel={props.onCloseModal} onAddPost={addPostHandler} />
-        </Modal>
-      )}
-      {content}
+      {isLoading &&
+        createPortal(<LoadingSpinner />, document.getElementById("loading"))}
+      {!isLoading && error && <p>{error}</p>}
+      {!isLoading && !error && content}
     </>
   );
 }
